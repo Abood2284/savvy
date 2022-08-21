@@ -2,12 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:web_chat_app/logger.dart';
 import 'package:web_chat_app/widgets/text_field.dart';
 
+import '../theme.dart';
+
 class SignupPage extends StatelessWidget {
   const SignupPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const _Stepper();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Padding(
+          padding: EdgeInsets.only(left: 16),
+          child: Text(
+            'Create Account',
+            style: TextStyle(
+              fontSize: 28,
+              color: AppTheme.accentColor,
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(left: 16),
+          child: Text(
+            'Sign up to get started!',
+            style: TextStyle(
+              color: AppColors.textFaded,
+              fontSize: 20,
+            ),
+          ),
+        ),
+        SizedBox(height: 16),
+        Expanded(
+          child: Card(color: AppColors.cardDark, child: _Stepper()),
+        ),
+      ],
+    );
   }
 }
 
@@ -77,6 +107,7 @@ class _StepperState extends State<_Stepper> {
   @override
   Widget build(BuildContext context) {
     return Stepper(
+      elevation: 0,
       type: StepperType.horizontal,
       currentStep: _stepperIndex,
       onStepTapped: (step) => setState(() {

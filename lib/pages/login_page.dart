@@ -21,12 +21,20 @@ class LoginPage extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              'Welcome',
+              style: TextStyle(
+                fontSize: 28,
+                color: AppTheme.accentColor,
+              ),
+            ),
             const Text(
               'Sign In to continue!',
               style: TextStyle(
                 color: AppColors.textFaded,
-                fontSize: 22,
+                fontSize: 20,
               ),
             ),
             const SizedBox(height: 16),
@@ -50,6 +58,18 @@ class LoginPage extends StatelessWidget {
                 pass = value;
                 log.d(pass);
               },
+            ),
+            const SizedBox(height: 22),
+            Container(
+              width: double.infinity,
+              height: 50,
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: ElevatedButton(
+                onPressed: () {
+                  log.i('TODO: LOGIN THE USER');
+                },
+                child: const Text('Login'),
+              ),
             ),
           ],
         ),
