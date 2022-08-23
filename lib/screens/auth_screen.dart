@@ -16,6 +16,7 @@ class AuthScreeen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text(''),
       ),
@@ -23,6 +24,7 @@ class AuthScreeen extends StatelessWidget {
         valueListenable: _authStatus,
         builder: (BuildContext context, String value, Widget? child) {
           return Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Expanded(

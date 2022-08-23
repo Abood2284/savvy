@@ -1,4 +1,4 @@
-package com.example.web_chat_app
+package com.example.savvy
 
 import io.flutter.embedding.android.FlutterActivity
 
