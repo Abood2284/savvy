@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:web_chat_app/logger.dart';
 import 'package:web_chat_app/widgets/text_field.dart';
 
+import '../auth.dart';
 import '../theme.dart';
 
 class SignupPage extends StatelessWidget {
@@ -60,29 +63,59 @@ class _Stepper extends StatefulWidget {
 
 class _StepperState extends State<_Stepper> {
   final log = getLogger('_Stepper');
-  int _stepperIndex = 0;
+  final Auth _auth = Auth();
+  final _formKey = GlobalKey<FormState>();
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
+  final List<String> chipData = [];
+
+  int _stepperIndex = 0;
+
   String _name = '';
   String _email = '';
   String _pass = '';
 
-  final List<String> chipData = [];
   bool _isFlutterSelected = false;
   bool _isReactSelected = false;
-
-  getDisposeController() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passController.dispose();
+  // Used to validate the password field.
+  bool isPasswordValid(String password) => password.length >= 6;
+  // Used to validate the email field.
+  bool isEmailValid(String email) {
+    RegExp regex = RegExp(
+        r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
+    return regex.hasMatch(email);
   }
 
-  @override
-  void dispose() {
-    getDisposeController();
-    super.dispose();
+  void onSignupButtonPressed() async {
+    log.i('Validating Form now....');
+    if (_formKey.currentState!.validate()) {
+      log.i('Email: $_email');
+      log.i('Pass: $_pass');
+      UserCredential currentUser = await _auth.signUpWithEmailAndPassword(
+          email: _email, password: _pass);
+      log.i('currentUser: $currentUser');
+      addUserMeta(currentUser);
+    }
+  }
+
+  void addUserMeta(UserCredential user) {
+    CollectionReference userCollection = firestore.collection('users');
+    userCollection
+        .doc(user.user!.uid)
+        .set({
+          'name': _name,
+          'email': _email,
+          'pass': _pass,
+          'flutter': _isFlutterSelected,
+          'react': _isReactSelected,
+        })
+        .then((value) => log.i('User Meta Data Added'))
+        .catchError((error) {
+          log.e('Error: $error');
+        });
   }
 
   controlsBuilder() {
@@ -97,7 +130,7 @@ class _StepperState extends State<_Stepper> {
             Expanded(
               child: ElevatedButton(
                 onPressed: controlDetails.onStepContinue,
-                child: Text(isLastStep ? 'Confirm' : 'Next'),
+                child: Text(isLastStep ? 'Signup' : 'Next'),
               ),
             ),
             const SizedBox(width: 16),
@@ -115,7 +148,24 @@ class _StepperState extends State<_Stepper> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Used to validate the password field.
+    bool isPasswordValid(String password) => password.length == 6;
+    // Used to validate the email field.
+    bool isEmailValid(String email) {
+      RegExp regex = RegExp(
+          r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
+      return regex.hasMatch(email);
+    }
+
     return Stepper(
       elevation: 0,
       type: StepperType.horizontal,
@@ -127,6 +177,7 @@ class _StepperState extends State<_Stepper> {
       onStepContinue: () {
         final isLastStep = _stepperIndex == _getSteps().length - 1;
         if (isLastStep) {
+          onSignupButtonPressed();
           log.d('Completed');
 
           // Send data to the server
@@ -151,43 +202,64 @@ class _StepperState extends State<_Stepper> {
         state: _stepperIndex > 0 ? StepState.complete : StepState.indexed,
         isActive: _stepperIndex >= 0,
         title: const Text('Personal'),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            TextFieldBuilder(
-              labelText: 'Name',
-              controller: _nameController,
-              icon: Icons.person,
-              onChanged: (value) {
-                _name = value;
-                log.d(_name);
-              },
-            ),
-            const SizedBox(
-              height: 22,
-            ),
-            TextFieldBuilder(
-              labelText: 'Email',
-              controller: _emailController,
-              icon: Icons.mail_outline,
-              onChanged: (value) {
-                _email = value;
-                log.d(_email);
-              },
-            ),
-            const SizedBox(
-              height: 22,
-            ),
-            TextFieldBuilder(
-              labelText: 'Password',
-              controller: _passController,
-              icon: Icons.lock,
-              onChanged: (value) {
-                _pass = value;
-                log.d(_pass);
-              },
-            ),
-          ],
+        content: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              TextFieldBuilder(
+                labelText: 'Name',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your name';
+                  }
+                  return null;
+                },
+                controller: _nameController,
+                icon: Icons.person,
+                onChanged: (value) {
+                  _name = value;
+                  log.d(_name);
+                },
+              ),
+              const SizedBox(
+                height: 22,
+              ),
+              TextFieldBuilder(
+                labelText: 'Email',
+                validator: (value) {
+                  if (!isEmailValid(value!)) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+                controller: _emailController,
+                icon: Icons.mail_outline,
+                onChanged: (value) {
+                  _email = value;
+                  log.d(_email);
+                },
+              ),
+              const SizedBox(
+                height: 22,
+              ),
+              TextFieldBuilder(
+                labelText: 'Password',
+                validator: (value) {
+                  if (!isPasswordValid(value!)) {
+                    return 'Please enter a valid password';
+                  }
+                  return null;
+                },
+                controller: _passController,
+                icon: Icons.lock,
+                onChanged: (value) {
+                  _pass = value;
+                  log.d(_pass);
+                },
+              ),
+            ],
+          ),
         ),
       ),
       Step(

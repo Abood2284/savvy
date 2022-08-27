@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:web_chat_app/widgets/text_field.dart';
 
+import '../auth.dart';
 import '../logger.dart';
 import '../theme.dart';
 
@@ -13,26 +15,30 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final log = getLogger('LoginPage');
+  final Auth _auth = Auth();
+  final formGlobalKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
-    final log = getLogger('LoginPage');
-    final formGlobalKey = GlobalKey<FormState>();
-    TextEditingController emailController = TextEditingController();
-    TextEditingController passController = TextEditingController();
-
     String email = '';
     String pass = '';
 
-    void onLoginButtonPressed() {
-      log.i('Emai!l: $email, Pass: $pass');
+    void onLoginButtonPressed() async {
       if (formGlobalKey.currentState!.validate()) {
         formGlobalKey.currentState!.save();
-        log.i('Emai!l: $email, Pass: $pass');
+        // log.i('Emai!l: $email, Pass: $pass');
+        UserCredential userCred = await _auth.signInWithEmailAndPassword(
+            email: email, password: pass);
+        log.i('User: $userCred');
+        log.i('User: ${userCred.user}');
       }
     }
 
     // Used to validate the password field.
-    bool isPasswordValid(String password) => password.length == 6;
+    bool isPasswordValid(String password) => password.length >= 6;
     // Used to validate the email field.
     bool isEmailValid(String email) {
       RegExp regex = RegExp(
@@ -41,8 +47,8 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     dispose() {
-      emailController.dispose();
-      passController.dispose();
+      _emailController.dispose();
+      _passController.dispose();
       super.dispose();
     }
 
@@ -78,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                   return null;
                 },
                 labelText: 'Email',
-                controller: emailController,
+                controller: _emailController,
                 icon: Icons.mail_outline,
                 onChanged: (value) {
                   email = value;
@@ -96,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
                   return null;
                 },
                 labelText: 'Password',
-                controller: passController,
+                controller: _passController,
                 icon: Icons.lock,
                 onChanged: (value) {
                   pass = value;
@@ -110,9 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                 margin:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: ElevatedButton(
-                  onPressed: () {
-                    log.i('TODO: LOGIN THE USER');
-                  },
+                  onPressed: onLoginButtonPressed,
                   child: const Text('Login'),
                 ),
               ),

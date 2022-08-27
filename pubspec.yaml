@@ -43,6 +43,7 @@ dependencies:
   faker: ^2.0.0
   stream_chat_flutter_core: ^4.4.1
   jiffy: ^5.0.0
+  cloud_firestore: ^3.4.6
 
 dev_dependencies:
   flutter_test:
