@@ -25,7 +25,7 @@ class CommunityPage extends StatelessWidget {
         SliverList(
           delegate: SliverChildBuilderDelegate(
             _delegate,
-            childCount: 50,
+            childCount: 2,
           ),
         ),
       ],
@@ -33,6 +33,7 @@ class CommunityPage extends StatelessWidget {
   }
 
   Widget _delegate(BuildContext context, int index) {
+    // final com = communities;
     var faker = Faker();
     return _communityTile(
       communityData: CommunityData(

@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:web_chat_app/logger.dart';
+import 'package:web_chat_app/models/user_model.dart';
+import 'package:web_chat_app/screens/screens.dart';
 import 'package:web_chat_app/widgets/text_field.dart';
 
 import '../auth.dart';
@@ -10,18 +12,8 @@ import '../theme.dart';
 class SignupPage extends StatelessWidget {
   const SignupPage({Key? key}) : super(key: key);
 
-  void onSignUpButtonPressed() {}
-
   @override
   Widget build(BuildContext context) {
-    bool isPasswordValid(String password) => password.length == 6;
-
-    bool isEmailValid(String email) {
-      RegExp regex = RegExp(
-          r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
-      return regex.hasMatch(email);
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
@@ -66,6 +58,7 @@ class _StepperState extends State<_Stepper> {
   final Auth _auth = Auth();
   final _formKey = GlobalKey<FormState>();
   FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final ValueNotifier<bool> _isLoading = ValueNotifier(false);
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -90,29 +83,40 @@ class _StepperState extends State<_Stepper> {
   }
 
   void onSignupButtonPressed() async {
-    log.i('Validating Form now....');
+    _isLoading.value = true;
     if (_formKey.currentState!.validate()) {
-      log.i('Email: $_email');
-      log.i('Pass: $_pass');
       UserCredential currentUser = await _auth.signUpWithEmailAndPassword(
           email: _email, password: _pass);
-      log.i('currentUser: $currentUser');
-      addUserMeta(currentUser);
+      addUserMeta(currentUser).then((_) {
+        _isLoading.value = false;
+      });
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil(
+          HomeScreen.routeName, (route) => false,
+          arguments: currentUser);
     }
   }
 
-  void addUserMeta(UserCredential user) {
+  Future<void> addUserMeta(UserCredential user) async {
+    final userModelObject = UserModel(
+      uid: user.user!.uid,
+      name: _name,
+      communityID: ['flutter'],
+    );
     CollectionReference userCollection = firestore.collection('users');
     userCollection
         .doc(user.user!.uid)
         .set({
-          'name': _name,
-          'email': _email,
-          'pass': _pass,
-          'flutter': _isFlutterSelected,
-          'react': _isReactSelected,
+          'name': userModelObject.name,
+          'communityID': userModelObject.communityID,
         })
-        .then((value) => log.i('User Meta Data Added'))
+        .then((value) => log.d('User Added')
+            // ! Only if the communityID is a list<CommunityData>
+            // userCollection.doc(user.user!.uid).update({
+            //       'community': FieldValue.arrayUnion(
+            //           userModelObject.communityID!.map((e) => e.id).toList()),
+            //     })
+            )
         .catchError((error) {
           log.e('Error: $error');
         });
@@ -125,23 +129,32 @@ class _StepperState extends State<_Stepper> {
       return Container(
         margin: const EdgeInsets.only(top: 16),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: ElevatedButton(
-                onPressed: controlDetails.onStepContinue,
-                child: Text(isLastStep ? 'Signup' : 'Next'),
-              ),
-            ),
-            const SizedBox(width: 16),
-            if (_stepperIndex != 0)
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: controlDetails.onStepCancel,
-                  child: const Text('Cancel'),
-                ),
-              ),
-          ],
+        child: ValueListenableBuilder(
+          valueListenable: _isLoading,
+          builder: (BuildContext context, bool isLoadingTrue, Widget? child) {
+            return isLoadingTrue
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: controlDetails.onStepContinue,
+                          child: Text(isLastStep ? 'Signup' : 'Next'),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      if (_stepperIndex != 0)
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: controlDetails.onStepCancel,
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                    ],
+                  );
+          },
         ),
       );
     };
@@ -157,15 +170,6 @@ class _StepperState extends State<_Stepper> {
 
   @override
   Widget build(BuildContext context) {
-    // Used to validate the password field.
-    bool isPasswordValid(String password) => password.length == 6;
-    // Used to validate the email field.
-    bool isEmailValid(String email) {
-      RegExp regex = RegExp(
-          r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
-      return regex.hasMatch(email);
-    }
-
     return Stepper(
       elevation: 0,
       type: StepperType.horizontal,

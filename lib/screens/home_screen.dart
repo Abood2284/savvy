@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
 import 'package:web_chat_app/helpers.dart';
 
-import 'package:web_chat_app/widgets/glowing_action_button.dart';
 import 'package:web_chat_app/widgets/widgets.dart';
 
 import '../logger.dart';
@@ -13,10 +12,13 @@ import '../pages/notification_page.dart';
 import '../theme.dart';
 
 class HomeScreen extends StatelessWidget {
+  static const String routeName = '/home';
   final log = getLogger('MyHomePage');
+  // final currentUserUID;
 
   HomeScreen({
     Key? key,
+    // required this.currentUserUID,
   }) : super(key: key);
 
   final ValueNotifier<int> pageIndex = ValueNotifier(0);

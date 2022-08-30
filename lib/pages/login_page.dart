@@ -1,10 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:web_chat_app/widgets/text_field.dart';
 
 import '../auth.dart';
 import '../logger.dart';
+import '../screens/screens.dart';
 import '../theme.dart';
+import '../widgets/widgets.dart';
 
 // ! It is stateful just because we need the dispose method to dispose the controller.
 class LoginPage extends StatefulWidget {
@@ -20,37 +21,43 @@ class _LoginPageState extends State<LoginPage> {
   final formGlobalKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
+  final ValueNotifier<bool> _isLoading = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passController.dispose();
+    super.dispose();
+  }
+
+  void _onLoginButtonPressed(String email, String pass) async {
+    _isLoading.value = true;
+    if (formGlobalKey.currentState!.validate()) {
+      formGlobalKey.currentState!.save();
+      // log.i('Emai!l: $email, Pass: $pass');
+      UserCredential currentUser = await _auth
+          .signInWithEmailAndPassword(email: email, password: pass)
+          .whenComplete(() => _isLoading.value = false);
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil(
+          HomeScreen.routeName, (route) => false,
+          arguments: currentUser);
+    }
+  }
+
+  // Used to validate the password field.
+  bool isPasswordValid(String password) => password.length >= 6;
+  // Used to validate the email field.
+  bool isEmailValid(String email) {
+    RegExp regex = RegExp(
+        r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
+    return regex.hasMatch(email);
+  }
 
   @override
   Widget build(BuildContext context) {
     String email = '';
     String pass = '';
-
-    void onLoginButtonPressed() async {
-      if (formGlobalKey.currentState!.validate()) {
-        formGlobalKey.currentState!.save();
-        // log.i('Emai!l: $email, Pass: $pass');
-        UserCredential userCred = await _auth.signInWithEmailAndPassword(
-            email: email, password: pass);
-        log.i('User: $userCred');
-        log.i('User: ${userCred.user}');
-      }
-    }
-
-    // Used to validate the password field.
-    bool isPasswordValid(String password) => password.length >= 6;
-    // Used to validate the email field.
-    bool isEmailValid(String email) {
-      RegExp regex = RegExp(
-          r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
-      return regex.hasMatch(email);
-    }
-
-    dispose() {
-      _emailController.dispose();
-      _passController.dispose();
-      super.dispose();
-    }
 
     return SizedBox(
       height: 200,
@@ -110,15 +117,25 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
               const SizedBox(height: 22),
-              Container(
-                width: double.infinity,
-                height: 50,
-                margin:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: ElevatedButton(
-                  onPressed: onLoginButtonPressed,
-                  child: const Text('Login'),
-                ),
+              ValueListenableBuilder(
+                valueListenable: _isLoading,
+                builder:
+                    (BuildContext context, bool isLoadingTrue, Widget? child) {
+                  return isLoadingTrue
+                      ? const Center(child: CircularProgressIndicator())
+                      : Container(
+                          width: double.infinity,
+                          height: 50,
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _onLoginButtonPressed(email, pass);
+                            },
+                            child: const Text('Login'),
+                          ),
+                        );
+                },
               ),
             ],
           ),
