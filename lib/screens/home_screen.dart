@@ -1,4 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
@@ -13,21 +15,20 @@ import '../theme.dart';
 
 class HomeScreen extends StatelessWidget {
   static const String routeName = '/home';
-  final log = getLogger('MyHomePage');
-  // final currentUserUID;
+  final log = getLogger('HomeScreen');
+  late UserCredential currentUserUID;
 
   HomeScreen({
     Key? key,
-    // required this.currentUserUID,
   }) : super(key: key);
 
   final ValueNotifier<int> pageIndex = ValueNotifier(0);
   final ValueNotifier<String> titleIndex = ValueNotifier('Community');
 
-  final pages = const [
-    CommunityPage(),
+  final pages = [
+    const CommunityPage(),
     // ProfilePage(),
-    NotificationPage(),
+    const NotificationPage(),
   ];
 
   final title = const [
@@ -41,8 +42,24 @@ class HomeScreen extends StatelessWidget {
     pageIndex.value = index;
   }
 
+  void getDataFromFirestore(BuildContext context) {
+    currentUserUID =
+        ModalRoute.of(context)!.settings.arguments as UserCredential;
+    log.i(currentUserUID.user!.uid);
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUserUID.user!.uid)
+        .get()
+        .then((value) {
+      Map<String, dynamic> currentUserData =
+          value.data() as Map<String, dynamic>;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => getDataFromFirestore(context));
     return Scaffold(
       appBar: AppBar(
         title: ValueListenableBuilder(
@@ -56,6 +73,7 @@ class HomeScreen extends StatelessWidget {
             splashColor: AppColors.secondary,
             borderRadius: BorderRadius.circular(8),
             onTap: () {
+              // getDataFromFirestore(context);
               log.i("TODO SEARCH");
             },
             child: const Padding(

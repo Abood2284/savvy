@@ -8,7 +8,9 @@ import 'package:web_chat_app/widgets/avatar.dart';
 import '../theme.dart';
 
 class CommunityPage extends StatelessWidget {
-  const CommunityPage({Key? key}) : super(key: key);
+  const CommunityPage({
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,12 +22,12 @@ class CommunityPage extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         const SliverToBoxAdapter(
-          child: _NameWelcomeCard(name: 'Abdul'),
+          child: _NameWelcomeCard(name: 'name'),
         ),
         SliverList(
           delegate: SliverChildBuilderDelegate(
             _delegate,
-            childCount: 2,
+            childCount: 20,
           ),
         ),
       ],

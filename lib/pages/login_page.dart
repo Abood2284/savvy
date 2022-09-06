@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:web_chat_app/constants.dart';
+import 'package:web_chat_app/helpers.dart';
 
 import '../auth.dart';
 import '../logger.dart';
@@ -34,14 +36,19 @@ class _LoginPageState extends State<LoginPage> {
     _isLoading.value = true;
     if (formGlobalKey.currentState!.validate()) {
       formGlobalKey.currentState!.save();
-      // log.i('Emai!l: $email, Pass: $pass');
-      UserCredential currentUser = await _auth
-          .signInWithEmailAndPassword(email: email, password: pass)
-          .whenComplete(() => _isLoading.value = false);
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-          HomeScreen.routeName, (route) => false,
-          arguments: currentUser);
+      try {
+        UserCredential currentUser = await _auth
+            .signInWithEmailAndPassword(email: email, password: pass)
+            .whenComplete(() => _isLoading.value = false);
+        if (!mounted) return;
+        Navigator.of(context).pushNamedAndRemoveUntil(
+            HomeScreen.routeName, (route) => false,
+            arguments: currentUser);
+      } on FirebaseAuthException catch (e) {
+        log.e(e.message);
+        _isLoading.value = false;
+        Helpers.ShowDialog(context, e.message ?? 'Unknown error');
+      }
     }
   }
 
@@ -49,9 +56,7 @@ class _LoginPageState extends State<LoginPage> {
   bool isPasswordValid(String password) => password.length >= 6;
   // Used to validate the email field.
   bool isEmailValid(String email) {
-    RegExp regex = RegExp(
-        r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
-    return regex.hasMatch(email);
+    return REGEXP_EMAIL_VALIDATION.hasMatch(email);
   }
 
   @override

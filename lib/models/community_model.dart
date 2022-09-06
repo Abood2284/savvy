@@ -50,15 +50,16 @@ class CommunityData {
   get latestMessageText => latestMessage;
   get profilePictureUrl => profilePicture;
 
-  final List<CommunityData> _communities = [
-    CommunityData(id: 'flutter', name: 'Flutter'),
-    CommunityData(id: 'react', name: 'React'),
-  ];
-  List<CommunityData> get communities => _communities;
+  List<CommunityData> communities = [];
+  //   CommunityData(id: 'flutter', name: 'Flutter'),
+  //   CommunityData(id: 'react', name: 'React'),
+  // ];
+
+  // List<CommunityData> get communities => _communities;
 
   void addCommunties({required String name, List<String> members = const []}) {
     final community = CommunityData(id: 'dummy', name: name, members: members);
-    _communities.add(community);
+    communities.add(community);
     // Notify the Listeners
   }
 }

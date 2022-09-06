@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:web_chat_app/constants.dart';
 import 'package:web_chat_app/logger.dart';
+import 'package:web_chat_app/models/models.dart';
 import 'package:web_chat_app/models/user_model.dart';
 import 'package:web_chat_app/screens/screens.dart';
 import 'package:web_chat_app/widgets/text_field.dart';
@@ -77,11 +79,10 @@ class _StepperState extends State<_Stepper> {
   bool isPasswordValid(String password) => password.length >= 6;
   // Used to validate the email field.
   bool isEmailValid(String email) {
-    RegExp regex = RegExp(
-        r'^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$');
-    return regex.hasMatch(email);
+    return REGEXP_EMAIL_VALIDATION.hasMatch(email);
   }
 
+  // * ISSUE: #1
   void onSignupButtonPressed() async {
     _isLoading.value = true;
     if (_formKey.currentState!.validate()) {
@@ -90,6 +91,7 @@ class _StepperState extends State<_Stepper> {
       addUserMeta(currentUser).then((_) {
         _isLoading.value = false;
       });
+
       if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil(
           HomeScreen.routeName, (route) => false,
@@ -97,26 +99,57 @@ class _StepperState extends State<_Stepper> {
     }
   }
 
+  List<Map> _listOfCommunityDataToMapConverter(List<CommunityData>? list) {
+    List<Map> maps = [];
+    for (var element in list ?? []) {
+      maps.add(element.toMap());
+    }
+    return maps;
+  }
+
+  List<CommunityData> createCommunityDataObject() {
+    List<CommunityData> communityData = [];
+    if (_isFlutterSelected) {
+      CommunityData flutter = CommunityData(
+        id: 'flutter',
+        name: 'Flutter',
+        members: const [],
+        profilePicture:
+            'https://pixabay.com/get/ga243a4148df10b0a37c9727431e916183f8e2dc11135d1004868c9172b111504c2b5360e16287035844bf47d38aa7b9ba31da329b13d8cb33e2e6ca41e01eb5c_1920.jpg',
+        latestMessage: 'Welcome to Flutter Community',
+      );
+      communityData.add(flutter);
+    }
+    if (_isReactSelected) {
+      CommunityData react = CommunityData(
+        id: 'react',
+        name: 'React',
+        members: const [],
+        profilePicture:
+            'https://pixabay.com/get/ga243a4148df10b0a37c9727431e916183f8e2dc11135d1004868c9172b111504c2b5360e16287035844bf47d38aa7b9ba31da329b13d8cb33e2e6ca41e01eb5c_1920.jpg',
+        latestMessage: 'Welcome to React Community',
+      );
+      communityData.add(react);
+    }
+    return communityData;
+  }
+
   Future<void> addUserMeta(UserCredential user) async {
-    final userModelObject = UserModel(
-      uid: user.user!.uid,
-      name: _name,
-      communityID: ['flutter'],
-    );
+    List<CommunityData> communityData = createCommunityDataObject();
+    final userModelObject =
+        UserModel(uid: user.user!.uid, name: _name, communityID: communityData);
+    final mapOfCommunityData =
+        _listOfCommunityDataToMapConverter(userModelObject.communityID);
+
     CollectionReference userCollection = firestore.collection('users');
     userCollection
         .doc(user.user!.uid)
         .set({
           'name': userModelObject.name,
-          'communityID': userModelObject.communityID,
+          'email': _email,
+          'communityID': mapOfCommunityData
         })
-        .then((value) => log.d('User Added')
-            // ! Only if the communityID is a list<CommunityData>
-            // userCollection.doc(user.user!.uid).update({
-            //       'community': FieldValue.arrayUnion(
-            //           userModelObject.communityID!.map((e) => e.id).toList()),
-            //     })
-            )
+        .then((value) => log.d('User Added'))
         .catchError((error) {
           log.e('Error: $error');
         });

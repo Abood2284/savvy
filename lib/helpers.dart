@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
 abstract class Helpers {
   static final random = Random();
 
@@ -11,5 +13,21 @@ abstract class Helpers {
   static DateTime randomDateTime() {
     final randomInt = random.nextInt(20000000);
     return DateTime.now().subtract(Duration(seconds: randomInt));
+  }
+
+  static void ShowDialog(BuildContext context, String error) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(error),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
   }
 }
