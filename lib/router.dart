@@ -16,7 +16,7 @@ Route<dynamic> genrateRoute(RouteSettings routeSettings) {
         builder: (_) => AuthScreeen(),
       );
     case ChatScreen.routeName:
-      var communityData = routeSettings.arguments as CommunityData;
+      var communityData = routeSettings.arguments as CommunityModel;
       return MaterialPageRoute(
         settings: routeSettings,
         builder: (_) => ChatScreen(communityData: communityData),

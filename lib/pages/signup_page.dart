@@ -99,7 +99,7 @@ class _StepperState extends State<_Stepper> {
     }
   }
 
-  List<Map> _listOfCommunityDataToMapConverter(List<CommunityData>? list) {
+  List<Map> _listOfCommunityDataToMapConverter(List<CommunityModel>? list) {
     List<Map> maps = [];
     for (var element in list ?? []) {
       maps.add(element.toMap());
@@ -107,10 +107,10 @@ class _StepperState extends State<_Stepper> {
     return maps;
   }
 
-  List<CommunityData> createCommunityDataObject() {
-    List<CommunityData> communityData = [];
+  List<CommunityModel> createCommunityDataObject() {
+    List<CommunityModel> communityData = [];
     if (_isFlutterSelected) {
-      CommunityData flutter = CommunityData(
+      CommunityModel flutter = CommunityModel(
         id: 'flutter',
         name: 'Flutter',
         members: const [],
@@ -121,7 +121,7 @@ class _StepperState extends State<_Stepper> {
       communityData.add(flutter);
     }
     if (_isReactSelected) {
-      CommunityData react = CommunityData(
+      CommunityModel react = CommunityModel(
         id: 'react',
         name: 'React',
         members: const [],
@@ -135,7 +135,7 @@ class _StepperState extends State<_Stepper> {
   }
 
   Future<void> addUserMeta(UserCredential user) async {
-    List<CommunityData> communityData = createCommunityDataObject();
+    List<CommunityModel> communityData = createCommunityDataObject();
     final userModelObject =
         UserModel(uid: user.user!.uid, name: _name, communityID: communityData);
     final mapOfCommunityData =
