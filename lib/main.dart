@@ -4,6 +4,7 @@ import 'package:stream_chat_flutter_core/stream_chat_flutter_core.dart';
 import 'package:web_chat_app/app.dart';
 import 'package:web_chat_app/router.dart';
 import 'package:web_chat_app/screens/screens.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'firebase_options.dart';
 import 'theme.dart';
@@ -14,6 +15,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   final client = StreamChatClient(streamKey);
+  await dotenv.load(fileName: ".env");
 
   runApp(MyApp(
     appTheme: AppTheme(),
