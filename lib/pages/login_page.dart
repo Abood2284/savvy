@@ -5,7 +5,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:twitter_login/twitter_login.dart';
 import 'package:web_chat_app/constants.dart';
 import 'package:web_chat_app/helpers.dart';
-import 'package:web_chat_app/widgets/show_message_box.dart';
 import 'package:web_chat_app/widgets/twitter_sign_in_button.dart';
 
 import '../auth.dart';
@@ -58,37 +57,63 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> onTwitterSignInButtonPressesd() async {
-    final twitterLogin = TwitterLogin(
-      apiKey: dotenv.env['TWITTER_API_KEY']!,
-      apiSecretKey: dotenv.env['TWITTER_API_SECRET_KEY']!,
-      redirectURI: "twitter-firebase-auth://",
-    );
-    final authResult = await twitterLogin.login();
+    try {
+      // log.i(dotenv.env['TWITTER_API_KEY']);
+      // log.i(dotenv.env['TWITTER_API_SECRET_KEY']);
+      final twitterLogin = TwitterLogin(
+        apiKey: dotenv.env['TWITTER_API_KEY']!,
+        apiSecretKey: dotenv.env['TWITTER_API_SECRET_KEY']!,
+        redirectURI: "savvy://",
+      );
 
-    switch (authResult.status) {
-      case TwitterLoginStatus.loggedIn:
-        final AuthCredential twitterAuthCredential =
-            TwitterAuthProvider.credential(
-                accessToken: authResult.authToken!,
-                secret: authResult.authTokenSecret!);
+      // final authResult = await twitterLogin.login();
+      final authResult = await twitterLogin.loginV2();
 
-        final userCredential =
-            await _auth.signInWithCredential(twitterAuthCredential);
-        if (!mounted) return;
-        showDialogBox(context, STATUS.Success);
-        break;
+      switch (authResult.status) {
+        case TwitterLoginStatus.loggedIn:
+          final twitterAuthCredential = TwitterAuthProvider.credential(
+              accessToken: authResult.authToken!,
+              secret: authResult.authTokenSecret!);
 
-      case TwitterLoginStatus.cancelledByUser:
-        if (!mounted) return;
-        showDialogBox(context, STATUS.Error);
-        break;
+          final userCredential =
+              await _auth.signInWithCredential(twitterAuthCredential);
+          log.wtf(userCredential.toString());
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Logged in successfully'),
+            ),
+          );
+          // showDialogBox(context, STATUS.success);
+          break;
 
-      case TwitterLoginStatus.error:
-        if (!mounted) return;
-        showDialogBox(context, STATUS.Error);
-        break;
-      default:
-        return;
+        case TwitterLoginStatus.cancelledByUser:
+          if (!mounted) return;
+          log.e(TwitterLoginStatus.cancelledByUser.toString());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Logged in Failed'),
+            ),
+          );
+          // showDialogBox(context, STATUS.error);
+          break;
+
+        case TwitterLoginStatus.error:
+          if (!mounted) return;
+          log.e(TwitterLoginStatus.error.toString());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error'),
+            ),
+          );
+          // showDialogBox(context, STATUS.error);
+          break;
+        default:
+          return;
+      }
+    } on FirebaseAuthException catch (e) {
+      log.e(e.message);
+      Helpers.ShowDialog(context, e.message ?? 'Unknown error');
     }
   }
 
@@ -184,9 +209,10 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 22),
               const Text('OR'),
+              const SizedBox(height: 22),
               TwitterSignInButton(
                 faIcon:
-                    const FaIcon(FontAwesomeIcons.twitter, color: Colors.blue),
+                    const FaIcon(FontAwesomeIcons.twitter, color: Colors.white),
                 text: 'Sign in with Twitter',
                 onPressed: onTwitterSignInButtonPressesd,
               ),

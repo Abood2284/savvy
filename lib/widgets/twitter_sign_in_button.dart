@@ -15,7 +15,7 @@ class TwitterSignInButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color.fromARGB(255, 168, 168, 168),
+        // backgroundColor: const Color.fromARGB(255, 168, 168, 168),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0),
         ),

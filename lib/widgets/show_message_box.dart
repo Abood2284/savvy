@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 enum STATUS {
-  Success,
-  Error,
+  success,
+  error,
 }
 
 Future<void> showDialogBox(BuildContext context, status) async {
@@ -10,10 +10,10 @@ Future<void> showDialogBox(BuildContext context, status) async {
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(
-        status == status.Success ? 'Success' : 'Error',
+        status == status.success ? 'success' : 'error',
       ),
       content: Text(
-        status == status.Success
+        status == status.success
             ? 'LogIn Succesfull'
             : 'We encountered an error',
       ),
