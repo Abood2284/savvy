@@ -13,7 +13,7 @@ class ChatScreen extends StatelessWidget {
     required this.communityData,
   }) : super(key: key);
 
-  final CommunityData communityData;
+  final CommunityModel communityData;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,7 @@ class _AppBarTitle extends StatelessWidget {
     required this.communityData,
   }) : super(key: key);
 
-  final CommunityData communityData;
+  final CommunityModel communityData;
 
   @override
   Widget build(BuildContext context) {

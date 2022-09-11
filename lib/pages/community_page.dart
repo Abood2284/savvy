@@ -1,16 +1,30 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:faker/faker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:web_chat_app/helpers.dart';
 import 'package:web_chat_app/models/models.dart';
 import 'package:web_chat_app/screens/chat_screen.dart';
 import 'package:web_chat_app/widgets/avatar.dart';
 
+import '../logger.dart';
 import '../theme.dart';
 
 class CommunityPage extends StatelessWidget {
-  const CommunityPage({
+  final log = getLogger('CommunityPage');
+  final UserCredential userCred;
+
+  CommunityPage({
     Key? key,
+    required this.userCred,
   }) : super(key: key);
+
+  Stream getDataFromFirestore() {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userCred.user!.uid)
+        .snapshots();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,18 +33,43 @@ class CommunityPage extends StatelessWidget {
     /// You can use Slivers when you want to have complex scrolling, such as Column having listView & Row & column etc
     /// Slivers needs a list of Widgets
     /// Slivers asks for List<Widgets> which are slivers to convert your widget to slivers wrap them with SliverToBoxAdapter
-    return CustomScrollView(
-      slivers: [
-        const SliverToBoxAdapter(
-          child: _NameWelcomeCard(name: 'name'),
-        ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            _delegate,
-            childCount: 20,
-          ),
-        ),
-      ],
+    return StreamBuilder(
+      stream: getDataFromFirestore(),
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        if (snapshot.hasData) {
+          final currentUserData = snapshot.data!;
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: _NameWelcomeCard(name: currentUserData['name']),
+              ),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  _delegate,
+                  childCount: 20,
+                ),
+              ),
+            ],
+          );
+        } else {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+      },
+      // child: CustomScrollView(
+      //   slivers: [
+      //     const SliverToBoxAdapter(
+      //       child: _NameWelcomeCard(name: 'name'),
+      //     ),
+      //     SliverList(
+      //       delegate: SliverChildBuilderDelegate(
+      //         _delegate,
+      //         childCount: 20,
+      //       ),
+      //     ),
+      //   ],
+      // ),
     );
   }
 
@@ -38,7 +77,7 @@ class CommunityPage extends StatelessWidget {
     // final com = communities;
     var faker = Faker();
     return _communityTile(
-      communityData: CommunityData(
+      communityData: CommunityModel(
         id: '1',
         name: faker.person.name(),
         profilePicture: Helpers.randomPictureUrl(),
@@ -54,7 +93,7 @@ class _communityTile extends StatelessWidget {
     required this.communityData,
   }) : super(key: key);
 
-  final CommunityData communityData;
+  final CommunityModel communityData;
 
   @override
   Widget build(BuildContext context) {

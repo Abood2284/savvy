@@ -9,7 +9,7 @@ class UserModel {
   final String? profileUrl;
   // final String category; //! Don't have any usage for now.
   // final List<String>? communityID; //! Communities Marked True are listed here
-  final List<CommunityData>?
+  final List<CommunityModel>?
       communityID; //! Communities Marked True are listed here
 
   UserModel({
@@ -45,7 +45,7 @@ class UserModel {
       profileUrl:
           map['profileUrl'] != null ? map['profileUrl'] as String : null,
       communityID: map['communityID'] != null
-          ? map['communityID'] as List<CommunityData>
+          ? map['communityID'] as List<CommunityModel>
           : null,
     );
   }

@@ -1,7 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:twitter_login/twitter_login.dart';
 import 'package:web_chat_app/constants.dart';
 import 'package:web_chat_app/helpers.dart';
+import 'package:web_chat_app/widgets/twitter_sign_in_button.dart';
 
 import '../auth.dart';
 import '../logger.dart';
@@ -52,6 +56,67 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> onTwitterSignInButtonPressesd() async {
+    try {
+      // log.i(dotenv.env['TWITTER_API_KEY']);
+      // log.i(dotenv.env['TWITTER_API_SECRET_KEY']);
+      final twitterLogin = TwitterLogin(
+        apiKey: dotenv.env['TWITTER_API_KEY']!,
+        apiSecretKey: dotenv.env['TWITTER_API_SECRET_KEY']!,
+        redirectURI: "savvy://",
+      );
+
+      final authResult = await twitterLogin.login();
+      // log.wtf(authResult.errorMessage);
+
+      switch (authResult.status) {
+        case TwitterLoginStatus.loggedIn:
+          final twitterAuthCredential = TwitterAuthProvider.credential(
+              accessToken: authResult.authToken!,
+              secret: authResult.authTokenSecret!);
+
+          final userCredential =
+              await _auth.signInWithCredential(twitterAuthCredential);
+          log.wtf(userCredential.toString());
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Logged in successfully'),
+            ),
+          );
+          // showDialogBox(context, STATUS.success);
+          break;
+
+        case TwitterLoginStatus.cancelledByUser:
+          if (!mounted) return;
+          log.e(TwitterLoginStatus.cancelledByUser.toString());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Logged in Failed'),
+            ),
+          );
+          // showDialogBox(context, STATUS.error);
+          break;
+
+        case TwitterLoginStatus.error:
+          if (!mounted) return;
+          log.e(TwitterLoginStatus.error.toString());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error'),
+            ),
+          );
+          // showDialogBox(context, STATUS.error);
+          break;
+        default:
+          return;
+      }
+    } on FirebaseAuthException catch (e) {
+      log.e(e.message);
+      Helpers.ShowDialog(context, e.message ?? 'Unknown error');
+    }
+  }
+
   // Used to validate the password field.
   bool isPasswordValid(String password) => password.length >= 6;
   // Used to validate the email field.
@@ -71,7 +136,7 @@ class _LoginPageState extends State<LoginPage> {
         child: Container(
           margin: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Text(
                 'Welcome',
@@ -141,6 +206,15 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         );
                 },
+              ),
+              const SizedBox(height: 22),
+              const Text('OR'),
+              const SizedBox(height: 22),
+              TwitterSignInButton(
+                faIcon:
+                    const FaIcon(FontAwesomeIcons.twitter, color: Colors.white),
+                text: 'Sign in with Twitter',
+                onPressed: onTwitterSignInButtonPressesd,
               ),
             ],
           ),
