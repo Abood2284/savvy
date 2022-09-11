@@ -85,34 +85,36 @@ class _StepperState extends State<_Stepper> {
 
   // * ISSUE: #1
   void onSignupButtonPressed() async {
-    _isLoading.value = true;
-    if (_formKey.currentState!.validate()) {
-      firebase.UserCredential currentUser = await _auth
-          .signUpWithEmailAndPassword(email: _email, password: _pass);
-      addUserMeta(currentUser).then((_) {
-        _isLoading.value = false;
-      });
+    try {
+      _isLoading.value = true;
+      if (_formKey.currentState!.validate()) {
+        firebase.UserCredential currentUser = await _auth
+            .signUpWithEmailAndPassword(email: _email, password: _pass);
+        addUserMeta(currentUser).then((_) {
+          // _isLoading.value = false;
+        });
 
-      try {
-        StreamChatCore.of(context).client.connectUser(
-              User(
-                id: currentUser.user!.uid,
-                extraData: {
-                  'name': _name,
-                  'image': currentUser.user!.photoURL,
-                },
-              ),
-              currentUser.user!.uid,
-            );
-      } on Exception catch (e) {
-        log.e('Could not connect the user', e);
-        _isLoading.value = false;
+        final client = StreamChatCore.of(context).client;
+        // * Will create a user if not exists
+        client.connectUser(
+          User(
+            id: currentUser.user!.uid,
+            extraData: {
+              'name': _name,
+              'email': _email,
+            },
+          ),
+          client.devToken(currentUser.user!.uid).rawValue,
+        );
+        log.wtf('User created successfully');
+        if (!mounted) return;
+        Navigator.of(context).pushNamedAndRemoveUntil(
+            HomeScreen.routeName, (route) => false,
+            arguments: currentUser);
       }
-
-      if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil(
-          HomeScreen.routeName, (route) => false,
-          arguments: currentUser);
+    } on Exception catch (e) {
+      log.e('Could not connect the user', e);
+      _isLoading.value = false;
     }
   }
 
