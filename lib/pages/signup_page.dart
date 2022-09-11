@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
+import 'package:stream_chat_flutter_core/stream_chat_flutter_core.dart';
 import 'package:web_chat_app/constants.dart';
 import 'package:web_chat_app/logger.dart';
 import 'package:web_chat_app/models/models.dart';
@@ -86,11 +87,27 @@ class _StepperState extends State<_Stepper> {
   void onSignupButtonPressed() async {
     _isLoading.value = true;
     if (_formKey.currentState!.validate()) {
-      UserCredential currentUser = await _auth.signUpWithEmailAndPassword(
-          email: _email, password: _pass);
+      firebase.UserCredential currentUser = await _auth
+          .signUpWithEmailAndPassword(email: _email, password: _pass);
       addUserMeta(currentUser).then((_) {
         _isLoading.value = false;
       });
+
+      try {
+        StreamChatCore.of(context).client.connectUser(
+              User(
+                id: currentUser.user!.uid,
+                extraData: {
+                  'name': _name,
+                  'image': currentUser.user!.photoURL,
+                },
+              ),
+              currentUser.user!.uid,
+            );
+      } on Exception catch (e) {
+        log.e('Could not connect the user', e);
+        _isLoading.value = false;
+      }
 
       if (!mounted) return;
       Navigator.of(context).pushNamedAndRemoveUntil(
@@ -134,7 +151,7 @@ class _StepperState extends State<_Stepper> {
     return communityData;
   }
 
-  Future<void> addUserMeta(UserCredential user) async {
+  Future<void> addUserMeta(firebase.UserCredential user) async {
     List<CommunityModel> communityData = createCommunityDataObject();
     final userModelObject =
         UserModel(uid: user.user!.uid, name: _name, communityID: communityData);

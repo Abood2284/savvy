@@ -66,8 +66,8 @@ class _LoginPageState extends State<LoginPage> {
         redirectURI: "savvy://",
       );
 
-      // final authResult = await twitterLogin.login();
-      final authResult = await twitterLogin.loginV2();
+      final authResult = await twitterLogin.login();
+      // log.wtf(authResult.errorMessage);
 
       switch (authResult.status) {
         case TwitterLoginStatus.loggedIn:
