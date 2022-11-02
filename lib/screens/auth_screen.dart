@@ -1,3 +1,9 @@
+/*
+! NO LONGER USED -> DEPRECATED BY @Abood2284 on 2 Nov 2022
+! DELETEING PERMISSION GRANTED
+! KEPT FOR CODE REFERENCE ONLY
+*/
+
 import 'package:flutter/material.dart';
 import 'package:web_chat_app/pages/login_page.dart';
 import 'package:web_chat_app/pages/signup_page.dart';
@@ -29,7 +35,7 @@ class AuthScreeen extends StatelessWidget {
             children: <Widget>[
               Expanded(
                 child: _authStatus.value == 'Login'
-                    ? const LoginPage()
+                    ? LoginPage()
                     : const SignupPage(),
               ),
               Padding(
