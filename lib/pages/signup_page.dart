@@ -1,3 +1,9 @@
+/*
+! NO LONGER USED -> DEPRECATED BY @Abood2284 on 2 Nov 2022
+! DELETEING PERMISSION GRANTED
+! KEPT FOR CODE REFERENCE ONLY
+*/
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';

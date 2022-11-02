@@ -25,6 +25,7 @@ class Auth {
     return user;
   }
 
+// Used for Twitter Login
   Future<UserCredential> signInWithCredential(AuthCredential credential) async {
     return await _firebaseAuth.signInWithCredential(credential);
   }
